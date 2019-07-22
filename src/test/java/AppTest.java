@@ -3,10 +3,9 @@
  */
 import java.util.Arrays;
 import java.util.List;
-
-import org.hamcrest.Matcher;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import static org.hamcrest.core.Is.is;
 
 public class AppTest {
     @Test
