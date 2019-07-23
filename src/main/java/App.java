@@ -14,39 +14,64 @@ public class App {
 
     public String bestCharge(List<String> inputs) {
         //TODO: write code here
-    	StringBuilder result = new StringBuilder();
-    	int value = 0,value1=0,value2=0;
-    	for(String i : inputs) {
+    	//花的钱
+    	int price = 0;
+    	//省
+    	int less = 0;
+    	//第一种优惠方式
+    	SalesPromotion sp1 = null;
+    	//第二种优惠方式
+    	SalesPromotion sp2 = null;
+    	StringBuilder sb = new StringBuilder();
+    	sb.append("============= 订餐明细 =============\n");
+    	List<Item> item = itemRepository.findAll();
+    	//优惠方式
+    	List<SalesPromotion> sales = salesPromotionRepository.findAll();
+    	String half="";
+    	for(SalesPromotion sale:sales) {
+    		if(sale.getType().equals("BUY_30_SAVE_6_YUAN")) {
+    			sp1=sale;
+    		}else
+    			sp2=sale;
+    	}
+    	for(String i:inputs) {
     		String[] str = i.split(" ");
-    		//获取id
+    		
     		String id = str[0];
-    		//获取数量
     		String num = str[2];
-    		String name = this.itemRepository.getNameById(id);
-    		int price = this.itemRepository.getPriceById(id);
-    		int price1 = this.salesPromotionRepository.getPromotion2(id, price);
-            int tol = Integer.parseInt(num) * price;
-            value += tol;
-            value2 += Integer.parseInt(num) * price1;
-            result.append(name + " x " + num + " = " + tol + "元\n");
-        }
-        result.append("-----------------------------------\n");
-        if( value>value1&&value>value2){
-        	result.append("使用优惠:\n");
-            value1 = this.salesPromotionRepository.getPromotion1(value);
-            if (value1 <= value2 ) {
-                result.append("满30减6元，省6元\n");
-                result.append("-----------------------------------\n");
-                result.append("总计：" + value1 + "元\n");
-            } else {
-                result.append("指定菜品半价(黄焖鸡，凉皮)，省13元\n");
-                result.append("-----------------------------------\n");
-                result.append("总计：" + value2 + "元\n");
-            }
-        }else{
-            result.append("总计：" + value + "元\n");
-        }
-        result.append("===================================");
-        return result.toString();
+    		int number = Integer.valueOf(num);
+    		for(Item it:item) {
+    			if(id.equals(it.getId())) {
+    				if(sp2.getRelatedItems().contains(it.getId())) {
+    					less+=((int)it.getPrice()/2);
+    					if(half=="") {
+    						half = it.getName();
+    					}else {
+    						half+=("，"+it.getName());
+    					}
+    				}
+    				sb.append(it.getName()+" x "  + num + " = " + (number*(int)it.getPrice())+"元\n");
+    				price+=(int)number*it.getPrice();
+    				break;
+    			}
+    		}
+    	}
+    	if(price>=30||less>0) {
+    		sb.append("-----------------------------------\n使用优惠:\n");
+    	}
+    	if(price>=30&&less<=6) {
+    		less=6;
+    		sb.append(sp1.getDisplayName()+"，省"+less+"元\n");
+    	}
+    	if(less>6) {
+    		sb.append(sp2.getDisplayName()+"("+half+")");
+    		sb.append("，省"+less+"元\n");
+    	}
+    	sb.append("-----------------------------------\n" + 
+    			"总计："+(price-less)+"元\n" + 
+    			"===================================");
+    	
+    	System.out.println(sb.toString());
+        return sb.toString();
     }
 }
